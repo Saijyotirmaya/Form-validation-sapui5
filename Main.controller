@@ -1,0 +1,212 @@
+sap.ui.define([
+    "sap/ui/core/mvc/Controller",
+    "sap/ui/core/Fragment",
+     "sap/m/MessageToast"
+], (Controller,Fragment,MessageToast) => {
+    "use strict";
+
+    return Controller.extend("com.kt.com.project7.controller.Main", {
+        onInit() {
+        },
+        
+        onCandidatepress:function(){
+                 
+            var randomId = "ID-" + Math.floor(Math.random() * 1000000);
+            this.getView().getModel("Omodel").setProperty("/CandidateId", randomId)
+             
+            if (!this._oDialog) {
+                Fragment.load({
+                    id: this.getView().getId(),
+                    name: "com.kt.com.project7.fragment.Candidate",
+                    controller: this
+                }).then(function (oDialog) {
+                    this._oDialog = oDialog;
+                    this.getView().addDependent(this._oDialog);
+                    this._oDialog.open();
+                }.bind(this));
+            } else {
+                this._oDialog.open();
+            }
+        },
+        onCancelpress:function(){
+            this._oDialog.close();
+        },
+
+       
+      
+        onNamelivechange:function(oEvent){
+                 
+            var oModel = this.getView().getModel("Omodel");
+            var sInputValue = oEvent.getParameter("value"); // Get the current input value
+      
+            // Allow only alphabets and spaces using a regular expression
+            var sFilteredValue = sInputValue.replace(/[^a-zA-Z ]/g, "");
+
+            var oInput = oEvent.getSource();
+            oInput.setValue(sFilteredValue);
+            // Check if the input contains invalid characters
+            if (sInputValue !== sFilteredValue) {
+              // Set the filtered value back into the model and show an error
+              oModel.setProperty("/Name", sFilteredValue);
+              oModel.setProperty("/valueStateName", "Error");
+            } else {
+              // Input is valid, clear the error state
+              oModel.setProperty("/Name", sFilteredValue);
+              oModel.setProperty("/valueStateName", "None");
+            }
+        },
+        onchangeofmobNumber:function(oEvent){
+            var oModel = this.getView().getModel("Omodel");
+            var sValue = oEvent.getParameter("value");
+
+            // Use a regular expression to allow only numbers
+            var isValid = sValue.replace(/[^0-9]/g, "");// Matches numbers up to 10 digits
+      
+             var oInput = oEvent.getSource();
+             oInput.setValue(isValid);
+
+            if (sValue !== isValid) {
+                // Set the filtered value back into the model and show an error
+                oModel.setProperty("/MobileNo", isValid);
+                oModel.setProperty("/valueStateMobileNo", "Error");
+              } else {
+                // Input is valid, clear the error state
+                oModel.setProperty("/MobileNo", isValid);
+                oModel.setProperty("/valueStateMobileNo", "None");
+              }
+             
+            
+        },
+        onCtcchange:function(){
+            var oModel = this.getView().getModel("Omodel");
+            var sCTC = oModel.getProperty("/ctc");
+            var sECTC = oModel.getProperty("/ectc");
+      
+            // Convert values to numbers (treat empty strings as 0)
+            var nCTC = parseFloat(sCTC) || 0;
+            var nECTC = parseFloat(sECTC) || 0;
+      
+            // Reset ValueStates initially
+            oModel.setProperty("/valueStatectc", "None");
+            oModel.setProperty("/valueStateectc", "None");
+      
+            // Validate ECTC should be greater than CTC
+            if (sCTC && sECTC) {
+              if (nECTC <= nCTC) {
+                // ECTC is invalid
+                oModel.setProperty("/valueStateectc", "Error");
+                oModel.setProperty("/ValueStateTextectc", "ECTC must be greater than CTC.");
+              } else {
+                // Valid case
+                oModel.setProperty("/valueStateectc", "None");
+              }
+            }
+    },
+
+    // onchangeofmail:function(){
+    //     var oModel = this.getView().getModel("Omodel");
+
+    //     var smail = oModel.getProperty("/email");
+
+    //     var sEmail = sValue.replace(^[a-zA-Z0-9_.±]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$);
+            
+    //     var oInput = oEvent.getSource();
+    //        oInput.setValue(isValid);
+
+    //     if (smail && sEmail.test(smail)) {
+    //         // Valid email
+    //         oModel.setProperty("/mailvalueStat", "None");
+    //       } else {
+    //         // Invalid email
+    //         oModel.setProperty("/mailvalueStat", "Error");
+    //       }
+
+    // },
+    onSavepress:function(){
+        var oModel = this.getView().getModel("Omodel");
+
+      // Get the current input values
+      var srandomid = oModel.getProperty("/CandidateId");
+      var sname = oModel.getProperty("/Name");
+      var askill = oModel.getProperty("/skill");
+      var snumber = oModel.getProperty("/MobileNo");
+      var stotalexp = oModel.getProperty("/totalexp");
+      var srelevantexp = oModel.getProperty("/relevantexp");
+      var sCTC = oModel.getProperty("/ctc");
+      var sECTC = oModel.getProperty("/ectc");
+      var snoticeperiod = oModel.getProperty("/noticeperiod");
+      var showsoon = oModel.getProperty("/howsooncanjion");
+      var scurrent = oModel.getProperty("/currentlocation");
+      var sState = oModel.getProperty("/selectedState");
+      var snewjoblocation = oModel.getProperty("/newjoblocation");
+      var savalable = oModel.getProperty("/avalableforinterview");
+      
+
+      // Check if both values are valid
+      if (oModel.getProperty("/valueStateectc") === "Error") {
+        sap.m.MessageToast.show("Please correct the errors before saving.");
+        return;
+      }
+
+      if (!sname || !snumber || !askill || !sCTC || !sECTC || !scurrent ||  !savalable) {
+        sap.m.MessageToast.show(" required to fill all field.");
+        return;
+      }
+
+      // Add the new entry to the table data
+      var aformData = oModel.getProperty("/formData");
+      aformData.push({
+        ID:srandomid,
+        name:sname,
+        Vskill:askill,
+        Vnumber:snumber,
+        Vtotalexp:stotalexp,
+        Vrelevantexp:srelevantexp,
+        Vnoticperiod:snoticeperiod,
+        Vhowsoon:showsoon,
+        Vcurrent:scurrent,
+        VState:sState,
+        Vnewjoblocation:snewjoblocation,
+        Vavailable:savalable,
+        VcurrentCTC: sCTC,
+        VexpectedCTC: sECTC
+      });
+
+      // Update the table data in the model
+      oModel.setProperty("/formData", aformData);
+
+      // Clear input fields after saving
+      oModel.setProperty("/ctc", "");
+      oModel.setProperty("/ectc", "");
+
+      // Reset ValueStates
+      oModel.setProperty("/valueStatectc", "None");
+      oModel.setProperty("/valueStateectc", "None");
+
+    
+      // Show success message
+      sap.m.MessageToast.show("Data saved successfully!");
+      this._oDialog.close();
+    },
+
+    onDialogClose:function(){
+        this.getView().getModel("Omodel").setProperty("/CandidateId", "");
+    },
+    onCountryChange:function(oEvent){
+        
+        var sSelectedCountry = oEvent.getSource().getSelectedKey(); // Get the selected country key
+      var oModel = this.getView().getModel("Omodel");
+
+      // Fetch states for the selected country
+      var aStates = oModel.getProperty("/countryStates/" + sSelectedCountry);
+
+      
+      oModel.setProperty("/states", aStates || []);
+
+      // Clear the selected state
+      oModel.setProperty("/selectedState", "");
+    }
+       
+
+    });
+});
